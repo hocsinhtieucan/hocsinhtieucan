@@ -55,9 +55,13 @@ a:hover {
     margin: 0 auto;
     padding: 0 15px;
     position: relative;
+}
+
+.main-wrapper {
     display: grid;
     grid-template-columns: 30% 70%;
     gap: 20px;
+    width: 100%;
 }
 
 /* Header Styles */
@@ -348,6 +352,7 @@ header h1 {
     align-items: center;
     opacity: 0;
     visibility: hidden;
+    z-index: 100;
     transition: var(--transition);
     box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
     z-index: 100;
@@ -864,6 +869,9 @@ footer p {
 @media (max-width: 992px) {
     .container {
         width: 90%;
+    }
+    
+    .main-wrapper {
         grid-template-columns: 35% 65%;
     }
     
@@ -879,6 +887,9 @@ footer p {
 @media (max-width: 768px) {
     .container {
         width: 95%;
+    }
+    
+    .main-wrapper {
         grid-template-columns: 1fr;
     }
     

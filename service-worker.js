@@ -1,5 +1,5 @@
 // service-worker.js
-const CACHE_VERSION = 'v273';
+const CACHE_VERSION = 'v305';
 const CACHE_NAME = `confession-cache-${CACHE_VERSION}`;
 
 // Khi service worker được cài đặt
@@ -67,3 +67,4 @@ self.addEventListener('fetch', event => {
       })
   );
 });
+

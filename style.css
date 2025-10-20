@@ -352,7 +352,8 @@ header h1 {
     align-items: center;
     opacity: 0;
     visibility: hidden;
-    z-index: 100;
+    z-index: 9999;
+    transition: all 0.3s ease;
     transition: var(--transition);
     box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
     z-index: 100;

@@ -232,16 +232,18 @@ function setupEventListeners() {
     // Back to top button visibility
     window.addEventListener('scroll', () => {
         if (document.body.scrollTop > 200 || document.documentElement.scrollTop > 200) {
-            backToTopBtn.style.display = 'block';
+            backToTopBtn.classList.add('show');
         } else {
-            backToTopBtn.style.display = 'none';
+            backToTopBtn.classList.remove('show');
         }
     });
     
     // Back to top button click
     backToTopBtn.addEventListener('click', () => {
-        document.body.scrollTop = 0; // For Safari
-        document.documentElement.scrollTop = 0; // For Chrome, Firefox, IE and Opera
+        window.scrollTo({
+            top: 0,
+            behavior: 'smooth'
+        });
     });
     
     // Admin button click

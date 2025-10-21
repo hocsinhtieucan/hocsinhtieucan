@@ -161,8 +161,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
 // Functions
 function loadPosts() {
-    // Show loading indicator
-    contentDiv.innerHTML = '<div class="loading"></div>';
+    // Show enhanced loading indicator
+    contentDiv.innerHTML = '<div class="loading-container fade-in"><div class="loading-spinner"></div><p>Đang tải bài viết...</p></div>';
     
     fetch(POSTS_JSON_URL)
         .then(response => {
@@ -176,14 +176,19 @@ function loadPosts() {
             // Sort posts by id in descending order (newest first)
             posts.sort((a, b) => b.id - a.id);
             
-            renderPosts();
-            renderTableOfContents();
-            updateAdminTable();
-            
-            // Initialize active TOC item
+            // Add a small delay for smoother transition
             setTimeout(() => {
+                renderPosts();
+                renderTableOfContents();
+                updateAdminTable();
+                
+                // Add fade-in class to header elements
+                document.querySelector('.header-top').classList.add('fade-in');
+                document.querySelector('.toc-container').classList.add('fade-in-delay-1');
+                
+                // Initialize active TOC item
                 updateActiveTocItem();
-            }, 500);
+            }, 300);
         })
         .catch(error => {
             console.error("Error loading posts:", error);
@@ -209,7 +214,24 @@ function handleScroll() {
         header.classList.remove('scrolled');
     }
     
-    // Also update active TOC item based on scroll position
+    // Toggle back-to-top button visibility
+    const backToTopBtn = document.getElementById("back-to-top");
+    if (window.scrollY > 300) {
+        backToTopBtn.classList.add('visible');
+    } else {
+        backToTopBtn.classList.remove('visible');
+    }
+    
+    // Trigger animations for elements that come into view
+    const cards = document.querySelectorAll('.content-card:not(.visible)');
+    cards.forEach(card => {
+        const rect = card.getBoundingClientRect();
+        if (rect.top <= window.innerHeight - 100) {
+            card.classList.add('visible');
+        }
+    });
+    
+    // Update active TOC item based on scroll position
     updateActiveTocItem();
 }
 
@@ -258,7 +280,7 @@ function renderPosts() {
     posts.forEach((post, index) => {
         const postElement = document.createElement("div");
         postElement.id = `post-${post.id}`;
-        postElement.className = "post";
+        postElement.className = "post content-card hover-effect";
         postElement.style.animationDelay = `${index * 0.1}s`;
         
         postElement.innerHTML = `
@@ -269,6 +291,9 @@ function renderPosts() {
         
         contentDiv.appendChild(postElement);
     });
+    
+    // Trigger custom event to notify that posts are loaded
+    document.dispatchEvent(new CustomEvent('postsLoaded'));
 }
 
 function renderTableOfContents() {

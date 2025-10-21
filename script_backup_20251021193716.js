@@ -30,25 +30,6 @@ const contentTableBody = document.getElementById('content-table-body');
 let posts = [];
 const ADMIN_PASSWORD = 'admin123'; // Change to a secure password in production
 
-// Array of pastel background colors for posts
-const pastelColors = [
-  '#ffebee', // light red
-  '#e8f5e9', // light green
-  '#e3f2fd', // light blue
-  '#f3e5f5', // light purple
-  '#fff3e0', // light orange
-  '#f1f8e9', // light lime
-  '#e0f7fa', // light cyan
-  '#fce4ec', // light pink
-  '#fffde7', // light yellow
-  '#e8eaf6'  // light indigo
-];
-
-// Get a random pastel color from the array
-function getRandomColor() {
-  return pastelColors[Math.floor(Math.random() * pastelColors.length)];
-}
-
 // Fetch posts from JSON file
 async function fetchPosts() {
   try {
@@ -75,15 +56,13 @@ function displayPosts() {
     postElement.classList.add('post');
     postElement.id = `post-${post.id}`;
     
-    const randomColor = getRandomColor();
     postElement.innerHTML = `
       <div class="post-header">
-        <h2 class="post-title"><img src="avatar.jpg" alt="Logo" class="title-logo"> ${post.title}</h2>
+        <h2 class="post-title">${post.title}</h2>
         <span class="post-date">${post.date}</span>
       </div>
       <div class="post-content">${post.content}</div>
     `;
-    postElement.style.backgroundColor = randomColor;
     
     contentElement.appendChild(postElement);
   });

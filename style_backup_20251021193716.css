@@ -160,15 +160,13 @@ header {
 
 .post {
   margin-bottom: 2rem;
-  padding: 1.5rem;
-  border-radius: 10px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  padding-bottom: 2rem;
+  border-bottom: 1px solid #eee;
   animation: fadeIn 0.5s ease-out;
-  border-left: 3px solid var(--primary);
 }
 
 .post:last-child {
-  margin-bottom: 0;
+  border-bottom: none;
 }
 
 .post-header {
@@ -176,16 +174,11 @@ header {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 1rem;
-  padding-bottom: 0.75rem;
-  border-bottom: 1px dashed rgba(0,0,0,0.1);
 }
 
 .post-title {
   color: var(--primary);
   font-size: 1.5rem;
-  display: flex;
-  align-items: center;
-  margin-bottom: 0.5rem;
 }
 
 .post-date {

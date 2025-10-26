@@ -8,9 +8,6 @@
     <meta http-equiv="Expires" content="0">
     <title>CONFESSION TIỂU CẦN - TRÀ VINH</title>
     <link rel="stylesheet" href="style.css?v=305">
-    <link rel="stylesheet" href="animations.css?v=1">
-    <link rel="stylesheet" href="3d-animations.css?v=1">
-    <link rel="stylesheet" href="enhanced-styles.css?v=1">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" integrity="sha512-z3gLpd7yknf1YoNbCzqRKc4qyor8gaKU1qmn+CShxbuBusANI9QpRohGBreCFkKxLhei6S9CQXFEbbKuqLg0DA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <link rel="icon" href="https://img.icons8.com/color/48/chat--v1.png" type="image/png">
 </head>
@@ -28,6 +25,13 @@
                 </div>
             </div>
             <button id="admin-btn" title="Đăng nhập Admin" class="hover-effect"><i class="fas fa-user-lock"></i> <span>Admin</span></button>
+        </div>
+        <div class="search-container">
+            <div class="search-wrapper">
+                <input type="text" id="search-input" placeholder="Tìm kiếm tiêu đề..." autocomplete="off">
+                <button id="search-clear" class="search-clear" title="Xóa tìm kiếm"><i class="fas fa-times"></i></button>
+                <div id="search-results" class="search-results"></div>
+            </div>
         </div>
     </header>
 
@@ -136,23 +140,11 @@
             </div>
         </div>
     </div>
-
-    <footer>
-        <div class="container">
-            <div class="footer-content">
-                <img src="avatar.jpg" alt="Logo" class="logo">
-                <div>
-                    <h3>CONFESSION TIỂU CẦN - TRÀ VINH</h3>
-                    <p>Nơi chia sẻ thông tin hữu ích</p>
-                </div>
-            </div>
-        </div>
-    </footer>
-
-    <script src="3d-effects.js?v=1"></script>
     <script src="script.js?v=306"></script>
 </body>
 </html>
+
+
 
 
 

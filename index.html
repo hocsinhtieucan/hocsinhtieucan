@@ -21,7 +21,6 @@
                 <img src="avatar.jpg" alt="Logo" class="logo hover-effect">
                 <div class="title-container">
                     <h1><span class="primary-text">CONFESSION</span> <span class="secondary-text">TIỂU CẦN - TRÀ VINH</span></h1>
-                    <p class="subtitle">Nơi chia sẻ thông tin hữu ích</p>
                 </div>
             </div>
             <button id="admin-btn" title="Đăng nhập Admin" class="hover-effect"><i class="fas fa-user-lock"></i> <span>Admin</span></button>
@@ -59,8 +58,10 @@
         <div class="modal-content">
             <span class="close">&times;</span>
             <h2>Đăng nhập Admin</h2>
-            <input type="password" id="admin-password" placeholder="Nhập mật khẩu Admin">
-            <button id="login-btn">Đăng nhập</button>
+            <form id="admin-login-form" onsubmit="return false;">
+                <input type="password" id="admin-password" placeholder="Nhập mật khẩu Admin" required>
+                <button id="login-btn" type="submit">Đăng nhập</button>
+            </form>
         </div>
     </div>
 
@@ -143,6 +144,7 @@
     <script src="script.js?v=306"></script>
 </body>
 </html>
+
 
 
 

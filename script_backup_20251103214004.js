@@ -3,13 +3,16 @@ let posts = [];
 const ADMIN_PASSWORD = '123456'; // Change this to a secure password in production
 let isAdmin = false;
 
+// DOM Elements
+let adminBtn, adminModal, contentModal, adminDashboard, backToTopBtn, scrollProgress;
+
 // Register Service Worker
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
         navigator.serviceWorker.register('/service-worker.js')
             .then(registration => {
                 console.log('ServiceWorker registration successful');
-                
+
                 // Check for updates
                 registration.addEventListener('updatefound', () => {
                     const newWorker = registration.installing;
@@ -33,21 +36,38 @@ if ('serviceWorker' in navigator) {
     });
 }
 
-// DOM Elements
-const adminBtn = document.getElementById('admin-btn');
-const adminModal = document.getElementById('admin-modal');
-const contentModal = document.getElementById('content-modal');
-const adminDashboard = document.getElementById('admin-dashboard');
-const backToTopBtn = document.getElementById('back-to-top');
-const scrollProgress = document.querySelector('.scroll-progress');
+// Initialize DOM Elements
+function initializeDOMElements() {
+    adminBtn = document.getElementById('admin-btn');
+    adminModal = document.getElementById('admin-modal');
+    contentModal = document.getElementById('content-modal');
+    adminDashboard = document.getElementById('admin-dashboard');
+    backToTopBtn = document.getElementById('back-to-top');
+    scrollProgress = document.querySelector('.scroll-progress');
+
+    if (!adminBtn || !adminModal || !contentModal || !adminDashboard) {
+        console.error('Required DOM elements not found');
+        return false;
+    }
+    return true;
+}
 
 // Initialize the application
 document.addEventListener('DOMContentLoaded', async () => {
-    await loadPosts();
-    setupEventListeners();
-    initializeScrollProgress();
-    checkAdminStatus();
-    initializeSearch();
+    try {
+        if (!initializeDOMElements()) {
+            showNotification('Lỗi khởi tạo ứng dụng', 'error');
+            return;
+        }
+        await loadPosts();
+        setupEventListeners();
+        initializeScrollProgress();
+        initializeAdminFeatures();
+        initializeSearch();
+    } catch (error) {
+        console.error('Initialization error:', error);
+        showNotification('Lỗi khởi tạo ứng dụng', 'error');
+    }
 });
 
 // Load posts from JSON file
@@ -83,15 +103,28 @@ function renderPosts() {
 
 // Format content with hashtags and styling
 function formatContent(content) {
-    return content
-        .replace(/#(\w+)/g, '<span class="hashtag">#$1</span>')
-        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-        .replace(/\*(.*?)\*/g, '<em>$1</em>')
-        .replace(/___(.*?)___/g, '<u>$1</u>')
-        .replace(/FROM:(.*?)$/gm, '<div class="source">Nguồn: $1</div>')
-        .replace(/\\n/g, '<br>');
-}
+    // Nếu nội dung đã chứa HTML tags, trả về nguyên bản
+    if (content.includes('</span>') || content.includes('</div>') ||
+        content.includes('</p>') || content.includes('</strong>') ||
+        content.includes('</em>')) {
+        return content;
+    }
 
+    // Nếu không, áp dụng formatting
+    return content
+        // Format hashtags not already in spans
+        .replace(/#(\w+)/g, '<span class="hashtag">#$1</span>')
+        // Format bold text
+        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+        // Format italic text
+        .replace(/\*(.*?)\*/g, '<em>$1</em>')
+        // Format underlined text
+        .replace(/___(.*?)___/g, '<u>$1</u>')
+        // Format source attribution
+        .replace(/(?:FROM:|Từ:)(.*?)(?:\n|$)/gi, '<span class="from">Từ:$1</span>')
+        // Convert line breaks
+        .split('\n').map(line => `<p>${line}</p>`).join('');
+}
 // Generate table of contents
 function generateTableOfContents() {
     const toc = document.getElementById('toc');
@@ -104,32 +137,155 @@ function generateTableOfContents() {
     });
 }
 
-// Setup all event listeners
-function setupEventListeners() {
-    // Modal close buttons
+// Initialize Admin Features
+function initializeAdminFeatures() {
+    // Check for stored admin status
+    const storedAdminStatus = localStorage.getItem('isAdmin');
+    isAdmin = storedAdminStatus === 'true';
+
+    // Update admin button text if logged in
+    if (isAdmin) {
+        adminBtn.innerHTML = '<i class="fas fa-user-shield"></i> <span>Dashboard</span>';
+    }
+
+    // Setup admin button click handler
+    adminBtn.addEventListener('click', handleAdminButtonClick);
+
+    // Setup admin login form
+    const loginBtn = document.getElementById('login-btn');
+    if (loginBtn) {
+        loginBtn.addEventListener('click', handleAdminLogin);
+    }
+
+    // Setup close buttons for all modals
+    setupModalCloseButtons();
+}
+
+// Handle admin button click
+function handleAdminButtonClick() {
+    if (isAdmin) {
+        showAdminDashboard();
+    } else {
+        showAdminLoginModal();
+    }
+}
+
+// Show admin login modal
+function showAdminLoginModal() {
+    adminModal.style.display = 'block';
+    document.body.classList.add('modal-open');
+    const passwordInput = document.getElementById('admin-password');
+    if (passwordInput) {
+        passwordInput.value = '';
+        passwordInput.focus();
+    }
+}
+
+// Handle admin login
+function handleAdminLogin(event) {
+    event.preventDefault();
+    const passwordInput = document.getElementById('admin-password');
+    if (!passwordInput) {
+        showNotification('Lỗi hệ thống', 'error');
+        return;
+    }
+
+    const password = passwordInput.value;
+    if (password === ADMIN_PASSWORD) {
+        loginSuccess();
+    } else {
+        loginFailed();
+    }
+}
+
+// Handle successful login
+function loginSuccess() {
+    isAdmin = true;
+    localStorage.setItem('isAdmin', 'true');
+    adminBtn.innerHTML = '<i class="fas fa-user-shield"></i> <span>Dashboard</span>';
+    closeAllModals();
+    showAdminDashboard();
+    showNotification('Đăng nhập thành công!', 'success');
+}
+
+// Handle failed login
+function loginFailed() {
+    showNotification('Sai mật khẩu!', 'error');
+    const passwordInput = document.getElementById('admin-password');
+    if (passwordInput) {
+        passwordInput.value = '';
+        passwordInput.focus();
+    }
+}
+
+// Show admin dashboard
+function showAdminDashboard() {
+    if (!isAdmin) {
+        showAdminLoginModal();
+        return;
+    }
+    adminDashboard.style.display = 'block';
+    document.body.classList.add('modal-open');
+    renderContentTable();
+}
+
+// Setup modal close buttons
+function setupModalCloseButtons() {
+    // Close buttons
     document.querySelectorAll('.close').forEach(closeBtn => {
-        closeBtn.addEventListener('click', () => {
-            adminModal.style.display = 'none';
-            contentModal.style.display = 'none';
-            adminDashboard.style.display = 'none';
-            document.body.classList.remove('modal-open');
-        });
+        closeBtn.addEventListener('click', () => closeAllModals());
     });
 
-    // Admin login
-    adminBtn.addEventListener('click', () => {
-        if (isAdmin) {
-            showAdminDashboard();
-        } else {
-            adminModal.style.display = 'block';
+    // Click outside to close
+    window.addEventListener('click', (event) => {
+        if (event.target.classList.contains('modal')) {
+            closeAllModals();
         }
     });
 
+    // Escape key to close
+    document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape') {
+            closeAllModals();
+        }
+    });
+}
+
+// Close all modals
+function closeAllModals() {
+    adminModal.style.display = 'none';
+    contentModal.style.display = 'none';
+    adminDashboard.style.display = 'none';
+    document.body.classList.remove('modal-open');
+}
+
+// Setup all event listeners
+function setupEventListeners() {
+
     // Login form submission
-    document.getElementById('login-btn').addEventListener('click', handleLogin);
+    document.getElementById('login-btn').addEventListener('click', (e) => {
+        e.preventDefault();
+        handleLogin();
+    });
 
     // Content form submission
     document.getElementById('add-content-form').addEventListener('submit', handleContentSubmit);
+
+    // Đóng modal khi click bên ngoài
+    window.addEventListener('click', (e) => {
+        if (e.target === adminModal) {
+            adminModal.style.display = 'none';
+            document.body.classList.remove('modal-open');
+        }
+        if (e.target === adminDashboard) {
+            adminDashboard.style.display = 'none';
+            document.body.classList.remove('modal-open');
+        }
+        if (e.target === contentModal) {
+            contentModal.style.display = 'none';
+            document.body.classList.remove('modal-open');
+        }
+    });
 
     // Text editor toolbar
     setupTextEditor();
@@ -139,6 +295,55 @@ function setupEventListeners() {
 
     // Admin dashboard controls
     setupAdminDashboardControls();
+
+    // Chatbot toggle logic
+    const chatbotToggle = document.getElementById('chatbot-toggle');
+    const chatbotBox = document.getElementById('chatbot-box');
+    const chatbotClose = document.getElementById('chatbot-close');
+    const chatbotForm = document.getElementById('chatbot-form');
+    const chatbotInput = document.getElementById('chatbot-input');
+    const chatbotMessages = document.getElementById('chatbot-messages');
+
+    if (chatbotToggle && chatbotBox) {
+        chatbotToggle.addEventListener('click', () => {
+            chatbotBox.classList.toggle('active');
+            if (chatbotBox.classList.contains('active')) {
+                chatbotInput.focus();
+            }
+        });
+    }
+
+    if (chatbotClose && chatbotBox) {
+        chatbotClose.addEventListener('click', () => {
+            chatbotBox.classList.remove('active');
+        });
+    }
+
+    if (chatbotForm && chatbotInput && chatbotMessages) {
+        chatbotForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const userMsg = chatbotInput.value.trim();
+            if (!userMsg) return;
+            // Hiển thị tin nhắn người dùng
+            const userDiv = document.createElement('div');
+            userDiv.className = 'chatbot-msg user';
+            userDiv.textContent = userMsg;
+            chatbotMessages.appendChild(userDiv);
+            chatbotMessages.scrollTop = chatbotMessages.scrollHeight;
+            chatbotInput.value = '';
+            // Hiển thị trạng thái đang trả lời
+            const botDiv = document.createElement('div');
+            botDiv.className = 'chatbot-msg loading';
+            botDiv.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang trả lời...';
+            chatbotMessages.appendChild(botDiv);
+            chatbotMessages.scrollTop = chatbotMessages.scrollHeight;
+            // Gửi API
+            const reply = await sendToDeepseek(userMsg);
+            botDiv.className = 'chatbot-msg bot';
+            botDiv.textContent = reply;
+            chatbotMessages.scrollTop = chatbotMessages.scrollHeight;
+        });
+    }
 }
 
 // Initialize scroll progress indicator
@@ -155,20 +360,28 @@ function initializeScrollProgress() {
 // Handle admin login
 function handleLogin() {
     const password = document.getElementById('admin-password').value;
+    console.log('Attempting login with password');
     if (password === ADMIN_PASSWORD) {
         isAdmin = true;
         localStorage.setItem('isAdmin', 'true');
         adminModal.style.display = 'none';
-        showAdminDashboard();
+        document.body.classList.remove('modal-open');
+        adminBtn.innerHTML = '<i class="fas fa-user-shield"></i> <span>Dashboard</span>';
         showNotification('Đăng nhập thành công!', 'success');
+        console.log('Login successful, showing dashboard');
+        showAdminDashboard();
     } else {
+        console.log('Login failed');
         showNotification('Sai mật khẩu!', 'error');
     }
 }
 
 // Check admin status on page load
 function checkAdminStatus() {
-    isAdmin = localStorage.getItem('isAdmin') === 'true';
+    const storedStatus = localStorage.getItem('isAdmin');
+    console.log('Stored admin status:', storedStatus);
+    isAdmin = storedStatus === 'true';
+    console.log('Current isAdmin value:', isAdmin);
     if (isAdmin) {
         adminBtn.innerHTML = '<i class="fas fa-user-shield"></i> <span>Dashboard</span>';
     }
@@ -176,7 +389,17 @@ function checkAdminStatus() {
 
 // Show admin dashboard
 function showAdminDashboard() {
+    console.log('Showing admin dashboard, isAdmin:', isAdmin);
+    if (!isAdmin) {
+        console.log('Not admin, showing login modal');
+        showNotification('Bạn cần đăng nhập để truy cập dashboard!', 'error');
+        adminModal.style.display = 'block';
+        document.body.classList.add('modal-open');
+        return;
+    }
+    console.log('Displaying dashboard');
     adminDashboard.style.display = 'block';
+    document.body.classList.add('modal-open');
     renderContentTable();
 }
 
@@ -257,8 +480,8 @@ function setupTextEditor() {
             }
 
             textarea.value = textarea.value.substring(0, selection.start) +
-                           replacement +
-                           textarea.value.substring(selection.end);
+                replacement +
+                textarea.value.substring(selection.end);
         }
     });
 }
@@ -374,13 +597,13 @@ function initializeSearch() {
     searchInput.addEventListener('input', debounce(() => {
         const query = searchInput.value.trim().toLowerCase();
         searchClear.style.display = query ? 'block' : 'none';
-        
+
         if (query.length < 2) {
             searchResults.style.display = 'none';
             return;
         }
 
-        filteredPosts = posts.filter(post => 
+        filteredPosts = posts.filter(post =>
             post.title.toLowerCase().includes(query) ||
             post.content.toLowerCase().includes(query)
         );
@@ -485,14 +708,14 @@ function highlightText(text, query) {
 function getContentPreview(content, query) {
     const index = content.toLowerCase().indexOf(query.toLowerCase());
     if (index === -1) return '';
-    
+
     const start = Math.max(0, index - 50);
     const end = Math.min(content.length, index + query.length + 50);
     let preview = content.slice(start, end);
-    
+
     if (start > 0) preview = '...' + preview;
     if (end < content.length) preview = preview + '...';
-    
+
     return highlightText(preview, query);
 }
 
@@ -559,3 +782,42 @@ style.textContent = `
     }
 `;
 document.head.appendChild(style);
+
+// Gửi tin nhắn tới Deepseek API
+async function sendToDeepseek(message) {
+    const apiKey = 'sk-b36aee9b682e460dbd823e343dbb95f9'; // Đặt key ở đây hoặc lấy từ biến môi trường
+    const url = 'https://api.deepseek.com/chat/completions';
+    const headers = {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`
+    };
+const body = JSON.stringify({
+  model: 'deepseek-chat',
+  messages: [
+    {
+      role: 'system',
+      content: `
+Bạn là một thầy giáo dạy tiếng Anh chuyên nghiệp.
+Trả lời ngắn gọn.
+Hãy giúp học viên cải thiện ngữ pháp, từ vựng, phát âm và kỹ năng giao tiếp.
+Giải thích rõ ràng, đưa ví dụ bằng tiếng Anh.
+Nếu học viên sai, hãy sửa nhẹ nhàng và giải thích lý do.
+Giữ giọng điệu thân thiện, kiên nhẫn và khích lệ.
+Chỉ dùng tiếng Việt khi cần làm rõ ý khó.
+      `
+    },
+    { role: 'user', content: message }
+  ],
+  stream: false
+});
+
+
+    try {
+        const res = await fetch(url, { method: 'POST', headers, body });
+        if (!res.ok) throw new Error('API lỗi');
+        const data = await res.json();
+        return data.choices?.[0]?.message?.content || 'Không có phản hồi.';
+    } catch (e) {
+        return 'Lỗi kết nối API.';
+    }
+}

@@ -12,7 +12,7 @@ if ('serviceWorker' in navigator) {
         navigator.serviceWorker.register('/service-worker.js')
             .then(registration => {
                 console.log('ServiceWorker registration successful');
-                
+
                 // Check for updates
                 registration.addEventListener('updatefound', () => {
                     const newWorker = registration.installing;
@@ -104,8 +104,8 @@ function renderPosts() {
 // Format content with hashtags and styling
 function formatContent(content) {
     // Nếu nội dung đã chứa HTML tags, trả về nguyên bản
-    if (content.includes('</span>') || content.includes('</div>') || 
-        content.includes('</p>') || content.includes('</strong>') || 
+    if (content.includes('</span>') || content.includes('</div>') ||
+        content.includes('</p>') || content.includes('</strong>') ||
         content.includes('</em>')) {
         return content;
     }
@@ -142,7 +142,7 @@ function initializeAdminFeatures() {
     // Check for stored admin status
     const storedAdminStatus = localStorage.getItem('isAdmin');
     isAdmin = storedAdminStatus === 'true';
-    
+
     // Update admin button text if logged in
     if (isAdmin) {
         adminBtn.innerHTML = '<i class="fas fa-user-shield"></i> <span>Dashboard</span>';
@@ -150,7 +150,7 @@ function initializeAdminFeatures() {
 
     // Setup admin button click handler
     adminBtn.addEventListener('click', handleAdminButtonClick);
-    
+
     // Setup admin login form
     const loginBtn = document.getElementById('login-btn');
     if (loginBtn) {
@@ -270,7 +270,7 @@ function setupEventListeners() {
 
     // Content form submission
     document.getElementById('add-content-form').addEventListener('submit', handleContentSubmit);
-    
+
     // Đóng modal khi click bên ngoài
     window.addEventListener('click', (e) => {
         if (e.target === adminModal) {
@@ -295,6 +295,55 @@ function setupEventListeners() {
 
     // Admin dashboard controls
     setupAdminDashboardControls();
+
+    // Chatbot toggle logic
+    const chatbotToggle = document.getElementById('chatbot-toggle');
+    const chatbotBox = document.getElementById('chatbot-box');
+    const chatbotClose = document.getElementById('chatbot-close');
+    const chatbotForm = document.getElementById('chatbot-form');
+    const chatbotInput = document.getElementById('chatbot-input');
+    const chatbotMessages = document.getElementById('chatbot-messages');
+
+    if (chatbotToggle && chatbotBox) {
+        chatbotToggle.addEventListener('click', () => {
+            chatbotBox.classList.toggle('active');
+            if (chatbotBox.classList.contains('active')) {
+                chatbotInput.focus();
+            }
+        });
+    }
+
+    if (chatbotClose && chatbotBox) {
+        chatbotClose.addEventListener('click', () => {
+            chatbotBox.classList.remove('active');
+        });
+    }
+
+    if (chatbotForm && chatbotInput && chatbotMessages) {
+        chatbotForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const userMsg = chatbotInput.value.trim();
+            if (!userMsg) return;
+            // Hiển thị tin nhắn người dùng
+            const userDiv = document.createElement('div');
+            userDiv.className = 'chatbot-msg user';
+            userDiv.textContent = userMsg;
+            chatbotMessages.appendChild(userDiv);
+            chatbotMessages.scrollTop = chatbotMessages.scrollHeight;
+            chatbotInput.value = '';
+            // Hiển thị trạng thái đang trả lời
+            const botDiv = document.createElement('div');
+            botDiv.className = 'chatbot-msg loading';
+            botDiv.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang trả lời...';
+            chatbotMessages.appendChild(botDiv);
+            chatbotMessages.scrollTop = chatbotMessages.scrollHeight;
+            // Gửi API
+            const reply = await sendToDeepseek(userMsg);
+            botDiv.className = 'chatbot-msg bot';
+            botDiv.textContent = reply;
+            chatbotMessages.scrollTop = chatbotMessages.scrollHeight;
+        });
+    }
 }
 
 // Initialize scroll progress indicator
@@ -431,8 +480,8 @@ function setupTextEditor() {
             }
 
             textarea.value = textarea.value.substring(0, selection.start) +
-                           replacement +
-                           textarea.value.substring(selection.end);
+                replacement +
+                textarea.value.substring(selection.end);
         }
     });
 }
@@ -548,13 +597,13 @@ function initializeSearch() {
     searchInput.addEventListener('input', debounce(() => {
         const query = searchInput.value.trim().toLowerCase();
         searchClear.style.display = query ? 'block' : 'none';
-        
+
         if (query.length < 2) {
             searchResults.style.display = 'none';
             return;
         }
 
-        filteredPosts = posts.filter(post => 
+        filteredPosts = posts.filter(post =>
             post.title.toLowerCase().includes(query) ||
             post.content.toLowerCase().includes(query)
         );
@@ -659,14 +708,14 @@ function highlightText(text, query) {
 function getContentPreview(content, query) {
     const index = content.toLowerCase().indexOf(query.toLowerCase());
     if (index === -1) return '';
-    
+
     const start = Math.max(0, index - 50);
     const end = Math.min(content.length, index + query.length + 50);
     let preview = content.slice(start, end);
-    
+
     if (start > 0) preview = '...' + preview;
     if (end < content.length) preview = preview + '...';
-    
+
     return highlightText(preview, query);
 }
 
@@ -733,3 +782,42 @@ style.textContent = `
     }
 `;
 document.head.appendChild(style);
+
+// Gửi tin nhắn tới Deepseek API
+async function sendToDeepseek(message) {
+    const apiKey = 'sk-b36aee9b682e460dbd823e343dbb95f9'; // Đặt key ở đây hoặc lấy từ biến môi trường
+    const url = 'https://api.deepseek.com/chat/completions';
+    const headers = {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`
+    };
+const body = JSON.stringify({
+  model: 'deepseek-chat',
+  messages: [
+    {
+      role: 'system',
+      content: `
+Bạn là một thầy giáo dạy tiếng Anh chuyên nghiệp.
+Trả lời ngắn gọn.
+Hãy giúp học viên cải thiện ngữ pháp, từ vựng, phát âm và kỹ năng giao tiếp.
+Giải thích rõ ràng, đưa ví dụ bằng tiếng Anh.
+Nếu học viên sai, hãy sửa nhẹ nhàng và giải thích lý do.
+Giữ giọng điệu thân thiện, kiên nhẫn và khích lệ.
+Chỉ dùng tiếng Việt khi cần làm rõ ý khó.
+      `
+    },
+    { role: 'user', content: message }
+  ],
+  stream: false
+});
+
+
+    try {
+        const res = await fetch(url, { method: 'POST', headers, body });
+        if (!res.ok) throw new Error('API lỗi');
+        const data = await res.json();
+        return data.choices?.[0]?.message?.content || 'Không có phản hồi.';
+    } catch (e) {
+        return 'Lỗi kết nối API.';
+    }
+}

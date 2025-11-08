@@ -34,39 +34,32 @@ self.addEventListener('activate', event => {
 
 // Khi trình duyệt yêu cầu tài nguyên
 self.addEventListener('fetch', event => {
-  // Đối với file JSON, luôn yêu cầu mạng và không sử dụng cache
+  // Không cache POST request (API, form submit)
+  if (event.request.method !== 'GET') {
+    return; // Để request đi thẳng mạng, SW không can thiệp
+  }
+
+  // Không cache JSON (API static), luôn lấy mạng trước
   if (event.request.url.endsWith('.json')) {
     event.respondWith(
       fetch(event.request, { cache: 'no-store' })
-        .catch(() => {
-          // Nếu không có kết nối mạng, thử lấy từ cache
-          return caches.match(event.request);
-        })
+        .catch(() => caches.match(event.request))
     );
     return;
   }
-  
-  // Đối với các tài nguyên khác, kiểm tra mạng trước, sau đó mới dùng cache
+
+  // Các GET request khác (CSS, JS, img) → cache bình thường
   event.respondWith(
     fetch(event.request)
       .then(response => {
-        // Clone response
         const responseClone = response.clone();
-        
-        // Mở cache và lưu response
-        caches.open(CACHE_NAME)
-          .then(cache => {
-            cache.put(event.request, responseClone);
-          });
-        
+        caches.open(CACHE_NAME).then(cache => cache.put(event.request, responseClone));
         return response;
       })
-      .catch(() => {
-        // Nếu không có kết nối mạng, thử lấy từ cache
-        return caches.match(event.request);
-      })
+      .catch(() => caches.match(event.request))
   );
 });
+
 
 
 

@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>Lịch sử Chatbot</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .chat-history-container {
+      max-width: 600px;
+      margin: 40px auto;
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.10);
+      padding: 24px;
+    }
+    .chat-history-title {
+      text-align: center;
+      color: #0078ff;
+      margin-bottom: 24px;
+    }
+    .chat-history-msg {
+      margin-bottom: 12px;
+      padding: 10px 14px;
+      border-radius: 8px;
+      max-width: 80%;
+      word-break: break-word;
+      line-height: 1.5;
+    }
+    .chat-history-msg.user {
+      background: #0078ff;
+      color: #fff;
+      margin-left: auto;
+      text-align: right;
+    }
+    .chat-history-msg.bot {
+      background: #e5e5ea;
+      color: #222;
+      margin-right: auto;
+      text-align: left;
+    }
+    .no-history {
+      text-align: center;
+      color: #888;
+      margin-top: 40px;
+    }
+  </style>
+</head>
+<body>
+  <div class="chat-history-container">
+    <h2 class="chat-history-title">Lịch sử Chatbot</h2>
+    <div id="chat-history-list"></div>
+    <div class="no-history" style="display:none">Chưa có lịch sử chat nào.</div>
+  </div>
+  <script>
+    // Lấy lịch sử chat từ localStorage
+    const history = JSON.parse(localStorage.getItem('chatbot_history') || '[]');
+    const list = document.getElementById('chat-history-list');
+    const noHistory = document.querySelector('.no-history');
+    if (history.length === 0) {
+      noHistory.style.display = 'block';
+    } else {
+      history.forEach(msg => {
+        const div = document.createElement('div');
+        div.className = 'chat-history-msg ' + msg.role;
+        div.innerHTML = msg.html || msg.text;
+        list.appendChild(div);
+      });
+    }
+  </script>
+</body>
+</html>
